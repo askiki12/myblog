@@ -1,8 +1,18 @@
 ---
+import { getCollection } from 'astro:content';
 import BaseHead from '../components/BaseHead.astro';
-import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
-import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+import Footer from '../components/Footer.astro';
+import PostCard from '../components/PostCard.astro';
+import TagList from '../components/TagList.astro';
+import { AUTHOR, AVATAR, SCHOOL, SITE_DESCRIPTION, SITE_TITLE, withBase } from '../consts';
+
+const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
+	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+
+const latest = posts.slice(0, 3);
+const tags = [...new Set(posts.flatMap((post) => post.data.tags))].sort((a, b) => a.localeCompare(b));
 ---
 
 <!doctype html>
@@ -13,37 +23,152 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 	<body>
 		<Header />
 		<main>
-			<h1>🧑‍🚀 Hello, Astronaut!</h1>
-			<p>
-				Welcome to the official <a href="https://astro.build/">Astro</a> blog starter template. This template
-				serves as a lightweight, minimally-styled starting point for anyone looking to build a personal
-				website, blog, or portfolio with Astro.
-			</p>
-			<p>
-				This template comes with a few integrations already configured in your{' '}
-				<code>astro.config.mjs</code> file. You can customize your setup with{' '}
-				<a href="https://astro.build/integrations">Astro Integrations</a> to add tools like Tailwind,
-				React, or Vue to your project.
-			</p>
-			<p>Here are a few ideas on how to get started with the template:</p>
-			<ul>
-				<li>Edit this page in <code>src/pages/index.astro</code></li>
-				<li>Edit the site header items in <code>src/components/Header.astro</code></li>
-				<li>Add your name to the footer in <code>src/components/Footer.astro</code></li>
-				<li>Check out the included blog posts in <code>src/content/blog/</code></li>
-				<li>Customize the blog post page layout in <code>src/layouts/BlogPost.astro</code></li>
-			</ul>
-			<p>
-				Have fun! If you get stuck, remember to{' '}
-				<a href="https://docs.astro.build/">read the docs</a>{' '}
-				or <a href="https://astro.build/chat">join us on Discord</a> to ask questions.
-			</p>
-			<p>
-				Looking for a blog template with a bit more personality? Check out{' '}
-				<a href="https://github.com/Charca/astro-blog-template">astro-blog-template</a>{' '}
-				by <a href="https://twitter.com/Charca">Maxi Ferreira</a>.
-			</p>
+			<section class="hero container">
+				<img class="avatar" src={withBase(AVATAR)} alt={AUTHOR} width="288" height="288" />
+				<div class="hero-text">
+					<p class="eyebrow">Welcome</p>
+					<h1>{AUTHOR}'s blog</h1>
+					<p class="school">{SCHOOL}</p>
+					<p class="lead">{SITE_DESCRIPTION}</p>
+					<div class="actions">
+						<a class="btn primary" href={withBase('/blog')}>Read the blog</a>
+						<a class="btn" href={withBase('/about')}>About me</a>
+					</div>
+				</div>
+			</section>
+
+			{
+				latest.length > 0 && (
+					<section class="container section">
+						<div class="section-heading">
+							<h2>Latest posts</h2>
+							<a href={withBase('/blog')}>View all &rarr;</a>
+						</div>
+						<div class="post-grid">
+							{latest.map((post) => (
+								<PostCard post={post} />
+							))}
+						</div>
+					</section>
+				)
+			}
+
+			{
+				tags.length > 0 && (
+					<section class="container section">
+						<div class="section-heading">
+							<h2>Topics</h2>
+							<a href={withBase('/tags')}>All tags &rarr;</a>
+						</div>
+						<TagList tags={tags} class="tag-cloud" />
+					</section>
+				)
+			}
 		</main>
 		<Footer />
 	</body>
 </html>
+
+<style>
+	.hero {
+		display: flex;
+		align-items: center;
+		gap: 3rem;
+		padding-block: 5rem 3rem;
+		max-width: 1040px;
+	}
+
+	.avatar {
+		flex: none;
+		width: clamp(180px, 26vw, 288px);
+		height: clamp(180px, 26vw, 288px);
+		border-radius: 50%;
+		border: 2px solid var(--border);
+		box-shadow: var(--shadow);
+	}
+
+	.hero h1 {
+		margin: 0 0 0.25rem;
+		font-size: clamp(2.4rem, 6vw, 3.4rem);
+		letter-spacing: -0.03em;
+	}
+
+	.school {
+		margin: 0 0 1rem;
+		font-size: 1.05rem;
+		font-weight: 600;
+		color: var(--accent);
+	}
+
+	.lead {
+		margin: 0 0 2rem;
+		font-size: 1.25rem;
+		color: var(--text-muted);
+		max-width: 54ch;
+	}
+
+	.actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem;
+	}
+
+	.btn {
+		display: inline-flex;
+		align-items: center;
+		padding: 0.65rem 1.25rem;
+		border: 1px solid var(--border-strong);
+		border-radius: 999px;
+		font-size: 0.95rem;
+		font-weight: 600;
+		color: var(--text);
+		text-decoration: none;
+		transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+	}
+
+	.btn:hover {
+		transform: translateY(-1px);
+		text-decoration: none;
+		color: var(--text);
+		border-color: var(--accent);
+	}
+
+	.btn.primary {
+		background: var(--accent);
+		border-color: var(--accent);
+		color: #fff;
+	}
+
+	.btn.primary:hover {
+		color: #fff;
+		background: var(--accent-hover);
+		border-color: var(--accent-hover);
+	}
+
+	.section {
+		margin-top: 3rem;
+	}
+
+	.post-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+		gap: 1.5rem;
+	}
+
+	:global(.tag-cloud) {
+		gap: 0.55rem;
+	}
+
+	:global(.tag-cloud a) {
+		font-size: 0.9rem;
+		padding: 0.35rem 0.9rem;
+	}
+
+	@media (max-width: 720px) {
+		.hero {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 1.5rem;
+		}
+	}
+</style>

@@ -1,0 +1,44 @@
+---
+import type { TreeNode } from '../utils';
+import { withBase } from '../consts';
+import Self from './TreeNode.astro';
+
+interface Props {
+	node: TreeNode;
+	currentPath?: string;
+	isRoot?: boolean;
+}
+
+const { node, currentPath = '', isRoot = false } = Astro.props;
+const href = isRoot ? withBase('/') : withBase(`/blog/${node.path}/`);
+const isActive = !isRoot && node.path === currentPath;
+const containsCurrent = node.path === currentPath || currentPath.startsWith(`${node.path}/`);
+const hasChildren = node.children.length > 0;
+const isOpen = isRoot || containsCurrent;
+---
+
+<li class:list={['tree-node', { root: isRoot }]}>
+	{
+		hasChildren ? (
+			<details open={isOpen}>
+				<summary class="tree-summary">
+					{isRoot || node.post ? (
+						<a href={href}>{node.title}</a>
+					) : (
+						<span class="tree-label">{node.title}</span>
+					)}
+					<span class="chevron" aria-hidden="true" />
+				</summary>
+				<ul class="tree-children">
+					{node.children.map((child) => (
+						<Self node={child} currentPath={currentPath} />
+					))}
+				</ul>
+			</details>
+		) : (
+			<a class:list={['tree-link', { active: isActive }]} href={href}>
+				{node.title}
+			</a>
+		)
+	}
+</li>

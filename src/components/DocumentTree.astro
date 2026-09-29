@@ -1,0 +1,27 @@
+---
+import { getCollection } from 'astro:content';
+import { buildPostTree } from '../utils';
+import TreeNode from './TreeNode.astro';
+
+interface Props {
+	currentPath?: string;
+}
+
+const { currentPath = '' } = Astro.props;
+
+const posts = await getCollection('blog', ({ data }) => !data.draft);
+const tree = buildPostTree(posts);
+---
+
+<nav class="doc-tree" aria-label="Post navigation">
+	<p class="tree-title">Docs</p>
+	<ul class="tree-root">
+		<TreeNode node={tree} currentPath={currentPath} isRoot={true} />
+	</ul>
+</nav>
+
+<script is:inline>
+	document.querySelectorAll('.tree-summary a').forEach((link) => {
+		link.addEventListener('click', (event) => event.stopPropagation());
+	});
+</script>

@@ -1,86 +1,312 @@
 ---
 import { Image } from 'astro:assets';
+import type { MarkdownHeading } from 'astro';
 import type { CollectionEntry } from 'astro:content';
 import BaseHead from '../components/BaseHead.astro';
 import Footer from '../components/Footer.astro';
 import FormattedDate from '../components/FormattedDate.astro';
 import Header from '../components/Header.astro';
+import TagList from '../components/TagList.astro';
+import TableOfContents from '../components/TableOfContents.astro';
+import DocumentTree from '../components/DocumentTree.astro';
+import type { ReadingStats } from '../utils';
 
-type Props = CollectionEntry<'blog'>['data'];
+type Props = Omit<CollectionEntry<'blog'>['data'], 'tags'> & {
+	currentPath?: string;
+	tags?: string[];
+	headings?: MarkdownHeading[];
+	stats?: ReadingStats;
+};
 
-const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
+const {
+	currentPath = '',
+	title,
+	description,
+	pubDate,
+	updatedDate,
+	heroImage,
+	tags = [],
+	headings = [],
+	stats,
+} = Astro.props;
+
+const hasToc = headings.length > 0;
 ---
 
+<!doctype html>
 <html lang="en">
 	<head>
 		<BaseHead title={title} description={description} />
-		<style>
-			main {
-				width: calc(100% - 2em);
-				max-width: 100%;
-				margin: 0;
-			}
-			.hero-image {
-				width: 100%;
-			}
-			.hero-image img {
-				display: block;
-				margin: 0 auto;
-				border-radius: 12px;
-				box-shadow: var(--box-shadow);
-			}
-			.prose {
-				width: 720px;
-				max-width: calc(100% - 2em);
-				margin: auto;
-				padding: 1em;
-				color: rgb(var(--gray-dark));
-			}
-			.title {
-				margin-bottom: 1em;
-				padding: 1em 0;
-				text-align: center;
-				line-height: 1;
-			}
-			.title h1 {
-				margin: 0 0 0.5em 0;
-			}
-			.date {
-				margin-bottom: 0.5em;
-				color: rgb(var(--gray));
-			}
-			.last-updated-on {
-				font-style: italic;
-			}
-		</style>
 	</head>
-
 	<body>
 		<Header />
-		<main>
-			<article>
-				<div class="hero-image">
-					{heroImage && <Image width={1020} height={510} src={heroImage} alt="" />}
-				</div>
-				<div class="prose">
-					<div class="title">
-						<div class="date">
+		<div class:list={['post-shell', { 'no-toc': !hasToc }]} id="post-shell">
+			<aside class="post-sidebar sidebar-left" aria-label="Post tree">
+				<DocumentTree currentPath={currentPath} />
+			</aside>
+
+			<main class="post-main">
+				<article class="post">
+					<div class="post-toolbar">
+						<button
+							id="toggle-tree"
+							class="icon-btn"
+							type="button"
+							title="Toggle document tree"
+							aria-controls="post-shell"
+							aria-expanded="true"
+						>
+							<span class="sr-only">Toggle document tree</span>
+							<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8">
+								<rect x="3" y="4" width="18" height="16" rx="2"></rect>
+								<line x1="9" y1="4" x2="9" y2="20"></line>
+							</svg>
+						</button>
+						{
+							hasToc && (
+								<button
+									id="toggle-toc"
+									class="icon-btn"
+									type="button"
+									title="Toggle table of contents"
+									aria-controls="post-shell"
+									aria-expanded="true"
+								>
+									<span class="sr-only">Toggle table of contents</span>
+									<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8">
+										<line x1="9" y1="6" x2="20" y2="6"></line>
+										<line x1="9" y1="12" x2="20" y2="12"></line>
+										<line x1="9" y1="18" x2="20" y2="18"></line>
+										<circle cx="4.5" cy="6" r="1.2"></circle>
+										<circle cx="4.5" cy="12" r="1.2"></circle>
+										<circle cx="4.5" cy="18" r="1.2"></circle>
+									</svg>
+								</button>
+							)
+						}
+					</div>
+
+					<header class="post-header">
+						<h1>{title}</h1>
+						{description && <p class="description">{description}</p>}
+						<div class="meta">
 							<FormattedDate date={pubDate} />
 							{
 								updatedDate && (
-									<div class="last-updated-on">
-										Last updated on <FormattedDate date={updatedDate} />
-									</div>
+									<>
+										<span aria-hidden="true">·</span>
+										<span>
+											Updated <FormattedDate date={updatedDate} />
+										</span>
+									</>
+								)
+							}
+							{
+								stats && (
+									<>
+										<span aria-hidden="true">·</span>
+										<span>{stats.minutes} min read</span>
+										<span aria-hidden="true">·</span>
+										<span>{stats.words} words</span>
+									</>
 								)
 							}
 						</div>
-						<h1>{title}</h1>
-						<hr />
+						<TagList tags={tags} />
+					</header>
+
+					{heroImage && <Image class="hero" width={1120} height={560} src={heroImage} alt="" />}
+
+					<div class="prose">
+						<slot />
 					</div>
-					<slot />
-				</div>
-			</article>
-		</main>
+				</article>
+			</main>
+
+			{
+				hasToc && (
+					<aside class="post-sidebar sidebar-right" aria-label="Table of contents">
+						<TableOfContents headings={headings} />
+					</aside>
+				)
+			}
+		</div>
 		<Footer />
 	</body>
 </html>
+
+<script>
+	const shell = document.getElementById('post-shell');
+	if (shell) {
+		const wide = window.matchMedia('(min-width: 1281px)');
+		const state = {
+			tree: localStorage.getItem('sidebar-tree') ?? (wide.matches ? 'open' : 'closed'),
+			toc: localStorage.getItem('sidebar-toc') ?? (wide.matches ? 'open' : 'closed'),
+		};
+
+		const apply = () => {
+			shell.classList.toggle('hide-tree', state.tree === 'closed');
+			shell.classList.toggle('hide-toc', state.toc === 'closed');
+			document.getElementById('toggle-tree')?.setAttribute('aria-expanded', String(state.tree === 'open'));
+			document.getElementById('toggle-toc')?.setAttribute('aria-expanded', String(state.toc === 'open'));
+		};
+
+		const toggle = (key: 'tree' | 'toc') => {
+			state[key] = state[key] === 'open' ? 'closed' : 'open';
+			localStorage.setItem(`sidebar-${key}`, state[key]);
+			apply();
+		};
+
+		apply();
+		document.getElementById('toggle-tree')?.addEventListener('click', () => toggle('tree'));
+		document.getElementById('toggle-toc')?.addEventListener('click', () => toggle('toc'));
+	}
+</script>
+
+<style>
+	.post-shell {
+		--tree-w: 240px;
+		--toc-w: 220px;
+		display: grid;
+		/* Center track is fixed (capped at --content); the two side tracks share
+		   the rest equally, so the article is always centered in the viewport and
+		   never moves or resizes when a sidebar is toggled. */
+		grid-template-columns: minmax(0, 1fr) minmax(0, var(--content)) minmax(0, 1fr);
+		column-gap: 2rem;
+		/* width:100% is required: as a flex item, `margin-inline:auto` alone makes
+		   the shell shrink-to-fit, so the side tracks would change with content. */
+		width: 100%;
+		max-width: 1600px;
+		margin-inline: auto;
+		padding-inline: 1.25rem;
+		padding-block: 2rem 3rem;
+		align-items: start;
+		/* Grow to fill the page so the footer sticks to the bottom. */
+		flex: 1 0 auto;
+	}
+
+	.post-shell.hide-tree .sidebar-left,
+	.post-shell.hide-toc .sidebar-right {
+		display: none;
+	}
+
+	.post-sidebar {
+		position: sticky;
+		top: 5rem;
+		max-height: calc(100vh - 6rem);
+		overflow-y: auto;
+		overscroll-behavior: contain;
+	}
+
+	.sidebar-left {
+		grid-column: 1;
+		justify-self: end;
+		width: 100%;
+		max-width: var(--tree-w);
+		padding-right: 1.5rem;
+		border-right: 1px solid var(--border);
+	}
+
+	.post-main {
+		grid-column: 2;
+		min-width: 0;
+	}
+
+	.sidebar-right {
+		grid-column: 3;
+		justify-self: start;
+		width: 100%;
+		max-width: var(--toc-w);
+		padding-left: 1.25rem;
+		border-left: 1px solid var(--border);
+	}
+
+	/* Stable reading column: same width with or without cover, and it does not
+	   jump when a sidebar is toggled. */
+	.post {
+		max-width: var(--content);
+		margin-inline: auto;
+	}
+
+	.post-toolbar {
+		display: flex;
+		justify-content: flex-end;
+		gap: 0.5rem;
+		margin-bottom: 1.25rem;
+	}
+
+	.icon-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 36px;
+		height: 36px;
+		padding: 0;
+		border: 1px solid var(--border);
+		border-radius: 9px;
+		background: var(--bg-elevated);
+		color: var(--text-muted);
+		cursor: pointer;
+		transition: color 0.15s ease, border-color 0.15s ease;
+	}
+
+	.icon-btn:hover {
+		color: var(--accent);
+		border-color: var(--accent);
+	}
+
+	.post-header {
+		margin-bottom: 2rem;
+	}
+
+	.post-header h1 {
+		margin: 0.75rem 0;
+		font-size: clamp(2rem, 5vw, 2.9rem);
+		letter-spacing: -0.03em;
+	}
+
+	.description {
+		margin: 0 0 1rem;
+		font-size: 1.15rem;
+		color: var(--text-muted);
+	}
+
+	.meta {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.45rem;
+		font-size: 0.88rem;
+		color: var(--text-faint);
+	}
+
+	.hero {
+		display: block;
+		width: 100%;
+		border-radius: var(--radius);
+		margin-bottom: 2rem;
+	}
+
+	@media (max-width: 1280px) {
+		.post-shell {
+			display: block;
+			max-width: none;
+		}
+
+		.post-sidebar {
+			position: static;
+			width: auto;
+			max-width: none;
+			max-height: none;
+			margin-bottom: 1.5rem;
+			padding: 1rem;
+			border: 1px solid var(--border);
+			border-radius: var(--radius-sm);
+			background: var(--bg-muted);
+		}
+
+		.post-toolbar {
+			margin-bottom: 1rem;
+		}
+	}
+</style>

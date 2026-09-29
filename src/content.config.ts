@@ -3,8 +3,20 @@ import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
 
 const blog = defineCollection({
-	// Load Markdown and MDX files in the `src/content/blog/` directory.
-	loader: glob({ base: './src/content/blog', pattern: '**/*.{md,mdx}' }),
+	// One blog = one directory: `index.md` (+ `assets/`, `childrenBlogs/`).
+	loader: glob({
+		base: './src/content/blog',
+		pattern: '**/*.{md,mdx}',
+		// Turn `my-post/index.md` and `my-post/childrenBlogs/child/index.md`
+		// into ids `my-post` and `my-post/child`.
+		generateId: ({ entry }) =>
+			entry
+				.replace(/\.(md|mdx)$/i, '')
+				.replace(/\/index$/i, '')
+				.split('/')
+				.filter((segment) => segment !== 'childrenBlogs')
+				.join('/'),
+	}),
 	// Type-check frontmatter using a schema
 	schema: ({ image }) =>
 		z.object({
@@ -14,6 +26,8 @@ const blog = defineCollection({
 			pubDate: z.coerce.date(),
 			updatedDate: z.coerce.date().optional(),
 			heroImage: z.optional(image()),
+			tags: z.array(z.string()).default([]),
+			draft: z.boolean().default(false),
 		}),
 });
 

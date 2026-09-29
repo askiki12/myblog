@@ -1,0 +1,108 @@
+---
+import { getCollection } from 'astro:content';
+import BaseHead from '../../components/BaseHead.astro';
+import Footer from '../../components/Footer.astro';
+import Header from '../../components/Header.astro';
+import { SITE_TITLE, withBase } from '../../consts';
+import { tagSlug } from '../../utils';
+
+const posts = await getCollection('blog', ({ data }) => !data.draft);
+
+const counts = new Map<string, number>();
+for (const post of posts) {
+	for (const tag of post.data.tags) {
+		counts.set(tag, (counts.get(tag) ?? 0) + 1);
+	}
+}
+const tags = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={`Tags | ${SITE_TITLE}`} description="Browse posts by topic." />
+	</head>
+	<body>
+		<Header />
+		<main class="container">
+			<header class="page-head">
+				<p class="eyebrow">Tags</p>
+				<h1>Browse by topic</h1>
+				<p class="lead">{tags.length} tags across {posts.length} posts.</p>
+			</header>
+
+			<ul class="tag-grid">
+				{
+					tags.map(([tag, count]) => (
+						<li>
+							<a href={withBase(`/tags/${tagSlug(tag)}/`)}>
+								<span class="tag-name">#{tag}</span>
+								<span class="tag-count">{count}</span>
+							</a>
+						</li>
+					))
+				}
+			</ul>
+
+			{tags.length === 0 && <p class="muted">No tags yet. Add <code>tags</code> to a post's frontmatter.</p>}
+		</main>
+		<Footer />
+	</body>
+</html>
+
+<style>
+	.page-head {
+		padding-block: 4rem 2.5rem;
+		max-width: 640px;
+	}
+
+	.page-head h1 {
+		margin: 0 0 0.75rem;
+		font-size: clamp(2.2rem, 5vw, 3rem);
+		letter-spacing: -0.03em;
+	}
+
+	.lead {
+		margin: 0;
+		color: var(--text-muted);
+	}
+
+	.tag-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+		gap: 0.75rem;
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	.tag-grid a {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+		padding: 0.9rem 1.1rem;
+		border: 1px solid var(--border);
+		border-radius: var(--radius-sm);
+		background: var(--bg-elevated);
+		color: var(--text);
+		text-decoration: none;
+		transition: border-color 0.15s ease, transform 0.15s ease;
+	}
+
+	.tag-grid a:hover {
+		border-color: var(--accent);
+		transform: translateY(-2px);
+		text-decoration: none;
+		color: var(--text);
+	}
+
+	.tag-name {
+		font-weight: 600;
+	}
+
+	.tag-count {
+		font-size: 0.8rem;
+		color: var(--text-faint);
+	}
+</style>
