@@ -99,3 +99,39 @@ export function buildPostTree(posts: CollectionEntry<'blog'>[]): TreeNode {
 
 	return root;
 }
+
+function findNode(node: TreeNode, path: string): TreeNode | undefined {
+	if (node.path === path) return node;
+	for (const child of node.children) {
+		const found = findNode(child, path);
+		if (found) return found;
+	}
+	return undefined;
+}
+
+/**
+ * Nearest ancestor of `currentPath` that is itself a post. Returns `null` when
+ * there is none, which means the parent is the Home page.
+ */
+export function findParentNode(root: TreeNode, currentPath: string): TreeNode | null {
+	const parts = currentPath.split('/').filter(Boolean);
+	for (let i = parts.length - 1; i >= 1; i--) {
+		const node = findNode(root, parts.slice(0, i).join('/'));
+		if (node?.post) return node;
+	}
+	return null;
+}
+
+/**
+ * Flatten the tree's posts in depth-first (pre-order) order — the same order the
+ * document tree is displayed in. Used for previous/next navigation.
+ */
+export function flattenPostsInTree(root: TreeNode): CollectionEntry<'blog'>[] {
+	const result: CollectionEntry<'blog'>[] = [];
+	const walk = (node: TreeNode) => {
+		if (node.post) result.push(node.post);
+		for (const child of node.children) walk(child);
+	};
+	walk(root);
+	return result;
+}

@@ -1,7 +1,7 @@
 ---
 import { Image } from 'astro:assets';
 import type { MarkdownHeading } from 'astro';
-import type { CollectionEntry } from 'astro:content';
+import { getCollection, type CollectionEntry } from 'astro:content';
 import BaseHead from '../components/BaseHead.astro';
 import Footer from '../components/Footer.astro';
 import FormattedDate from '../components/FormattedDate.astro';
@@ -9,7 +9,8 @@ import Header from '../components/Header.astro';
 import TagList from '../components/TagList.astro';
 import TableOfContents from '../components/TableOfContents.astro';
 import DocumentTree from '../components/DocumentTree.astro';
-import type { ReadingStats } from '../utils';
+import { withBase } from '../consts';
+import { buildPostTree, findParentNode, flattenPostsInTree, type ReadingStats } from '../utils';
 
 type Props = Omit<CollectionEntry<'blog'>['data'], 'tags'> & {
 	currentPath?: string;
@@ -31,6 +32,18 @@ const {
 } = Astro.props;
 
 const hasToc = headings.length > 0;
+
+const posts = await getCollection('blog', ({ data }) => !data.draft);
+const tree = buildPostTree(posts);
+const parentNode = currentPath ? findParentNode(tree, currentPath) : null;
+const parentHref = parentNode ? withBase(`/blog/${parentNode.path}/`) : withBase('/');
+const parentLabel = parentNode ? parentNode.title : 'Home';
+
+// Previous/next follow the document-tree order (DFS pre-order), matching the tree UI.
+const ordered = flattenPostsInTree(tree);
+const currentIndex = ordered.findIndex((post) => post.id === currentPath);
+const prevPost = currentIndex > 0 ? ordered[currentIndex - 1] : null;
+const nextPost = currentIndex >= 0 && currentIndex < ordered.length - 1 ? ordered[currentIndex + 1] : null;
 ---
 
 <!doctype html>
@@ -48,6 +61,31 @@ const hasToc = headings.length > 0;
 			<main class="post-main">
 				<article class="post">
 					<div class="post-toolbar">
+						<div class="post-toolbar-left">
+							<button id="back-page" class="back-link" type="button" title="Back to previous page">
+								<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+									<path d="M19 12H5"></path>
+									<path d="m12 19-7-7 7-7"></path>
+								</svg>
+								<span class="back-label">Back</span>
+							</button>
+							<a class="back-link" href={parentHref} title={`Back to ${parentLabel}`}>
+								<svg
+									viewBox="0 0 24 24"
+									width="16"
+									height="16"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="1.8"
+									aria-hidden="true"
+								>
+									<path d="M12 19V5"></path>
+									<path d="m5 12 7-7 7 7"></path>
+								</svg>
+								<span class="back-label">{parentLabel}</span>
+							</a>
+						</div>
+						<div class="post-toolbar-actions">
 						<button
 							id="toggle-tree"
 							class="icon-btn"
@@ -84,6 +122,7 @@ const hasToc = headings.length > 0;
 								</button>
 							)
 						}
+						</div>
 					</div>
 
 					<header class="post-header">
@@ -120,6 +159,29 @@ const hasToc = headings.length > 0;
 					<div class="prose">
 						<slot />
 					</div>
+
+					{
+						(prevPost || nextPost) && (
+							<nav class="post-nav" aria-label="Post navigation">
+								{prevPost ? (
+									<a class="post-nav-link prev" href={withBase(`/blog/${prevPost.id}/`)}>
+										<span class="post-nav-label">&larr; Previous</span>
+										<span class="post-nav-title">{prevPost.data.title}</span>
+									</a>
+								) : (
+									<span class="post-nav-spacer" />
+								)}
+								{nextPost ? (
+									<a class="post-nav-link next" href={withBase(`/blog/${nextPost.id}/`)}>
+										<span class="post-nav-label">Next &rarr;</span>
+										<span class="post-nav-title">{nextPost.data.title}</span>
+									</a>
+								) : (
+									<span class="post-nav-spacer" />
+								)}
+							</nav>
+						)
+					}
 				</article>
 			</main>
 
@@ -161,6 +223,15 @@ const hasToc = headings.length > 0;
 		document.getElementById('toggle-tree')?.addEventListener('click', () => toggle('tree'));
 		document.getElementById('toggle-toc')?.addEventListener('click', () => toggle('toc'));
 	}
+
+	const backPage = document.getElementById('back-page');
+	backPage?.addEventListener('click', () => {
+		if (window.history.length > 1) {
+			window.history.back();
+		} else {
+			window.location.href = import.meta.env.BASE_URL;
+		}
+	});
 </script>
 
 <style>
@@ -230,9 +301,59 @@ const hasToc = headings.length > 0;
 
 	.post-toolbar {
 		display: flex;
-		justify-content: flex-end;
-		gap: 0.5rem;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
 		margin-bottom: 1.25rem;
+	}
+
+	.post-toolbar-left {
+		display: flex;
+		flex: 1 1 auto;
+		align-items: center;
+		gap: 0.5rem;
+		min-width: 0;
+	}
+
+	.post-toolbar-actions {
+		display: flex;
+		flex: none;
+		gap: 0.5rem;
+	}
+
+	.back-link {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		min-width: 0;
+		padding: 0.4rem 0.85rem;
+		border: 1px solid var(--border);
+		border-radius: 999px;
+		background: var(--bg-elevated);
+		color: var(--text-muted);
+		font-family: inherit;
+		font-size: 0.9rem;
+		font-weight: 600;
+		text-decoration: none;
+		cursor: pointer;
+		transition: color 0.15s ease, border-color 0.15s ease;
+	}
+
+	.back-link:hover {
+		color: var(--accent);
+		border-color: var(--accent);
+		text-decoration: none;
+	}
+
+	.back-link svg {
+		flex: none;
+	}
+
+	.back-label {
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
 	.icon-btn {
@@ -285,6 +406,72 @@ const hasToc = headings.length > 0;
 		width: 100%;
 		border-radius: var(--radius);
 		margin-bottom: 2rem;
+	}
+
+	.post-nav {
+		display: flex;
+		gap: 1rem;
+		margin-top: 3rem;
+		padding-top: 2rem;
+		border-top: 1px solid var(--border);
+	}
+
+	.post-nav-link {
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+		gap: 0.25rem;
+		min-width: 0;
+		padding: 0.9rem 1.1rem;
+		border: 1px solid var(--border);
+		border-radius: var(--radius-sm);
+		background: var(--bg-elevated);
+		text-decoration: none;
+		transition: border-color 0.15s ease, transform 0.15s ease;
+	}
+
+	.post-nav-link:hover {
+		border-color: var(--accent);
+		transform: translateY(-2px);
+		text-decoration: none;
+	}
+
+	.post-nav-link.next {
+		text-align: right;
+	}
+
+	.post-nav-label {
+		font-size: 0.75rem;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--text-faint);
+	}
+
+	.post-nav-title {
+		overflow: hidden;
+		color: var(--text);
+		font-weight: 600;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.post-nav-spacer {
+		flex: 1;
+	}
+
+	@media (max-width: 560px) {
+		.post-nav {
+			flex-direction: column;
+		}
+
+		.post-nav-spacer {
+			display: none;
+		}
+
+		.post-nav-link.next {
+			text-align: left;
+		}
 	}
 
 	@media (max-width: 1280px) {
