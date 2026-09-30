@@ -1,0 +1,204 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import PostList from '../components/PostList.astro';
+import Pagination from '../components/Pagination.astro';
+import { SITE_DESCRIPTION, SITE_TITLE, withBase } from '../consts';
+import { getPlainText, getReadingStats, tagSlug } from '../utils';
+
+interface Props {
+	posts: CollectionEntry<'blog'>[];
+	allPosts: CollectionEntry<'blog'>[];
+	totalPosts: number;
+	currentPage: number;
+	totalPages: number;
+	prevUrl?: string | null;
+	nextUrl?: string | null;
+}
+
+const { posts, allPosts, totalPosts, currentPage, totalPages, prevUrl = null, nextUrl = null } = Astro.props;
+
+const searchIndex = allPosts.map((post) => {
+	const { minutes } = getReadingStats(post.body);
+	return {
+		url: withBase(`/blog/${post.id}/`),
+		title: post.data.title,
+		description: post.data.description,
+		date: post.data.pubDate.toLocaleDateString('en-us', {
+			year: 'numeric',
+			month: 'short',
+			day: 'numeric',
+		}),
+		minutes,
+		tags: post.data.tags.map((tag) => ({ label: tag, url: withBase(`/tags/${tagSlug(tag)}/`) })),
+		search: [post.data.title, post.data.description, ...post.data.tags, getPlainText(post.body)]
+			.join(' ')
+			.toLowerCase(),
+	};
+});
+const indexJson = JSON.stringify(searchIndex).replace(/</g, '\\u003c');
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={`Blog | ${SITE_TITLE}`} description={SITE_DESCRIPTION} />
+	</head>
+	<body>
+		<Header />
+		<main class="container">
+			<header class="page-head">
+				<div class="page-head-text">
+					<p class="eyebrow">Blog</p>
+					<h1>
+						<span id="page-title-label">All posts</span>{' '}<span class="count" id="page-count">({totalPosts} posts)</span>
+					</h1>
+				</div>
+				<div class="search">
+					<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+						<circle cx="11" cy="11" r="7"></circle>
+						<line x1="16" y1="16" x2="21" y2="21"></line>
+					</svg>
+					<input id="blog-search" type="search" placeholder="Search posts…" aria-label="Search posts" autocomplete="off" />
+				</div>
+			</header>
+
+			<PostList posts={posts} />
+
+			<div id="blog-pagination">
+				<Pagination currentPage={currentPage} totalPages={totalPages} prevUrl={prevUrl} nextUrl={nextUrl} />
+			</div>
+		</main>
+		<Footer />
+
+		<script type="application/json" id="post-search-index" is:inline set:html={indexJson}></script>
+	</body>
+</html>
+
+<script>
+	const input = document.getElementById('blog-search') as HTMLInputElement | null;
+	const list = document.getElementById('post-list');
+	const label = document.getElementById('page-title-label');
+	const count = document.getElementById('page-count');
+	const pagination = document.getElementById('blog-pagination');
+	const indexEl = document.getElementById('post-search-index');
+
+	if (input && list && indexEl && label && count) {
+		const index = JSON.parse(indexEl.textContent || '[]');
+		const defaultHTML = list.innerHTML;
+		const defaultLabel = label.textContent ?? '';
+		const defaultCount = count.textContent ?? '';
+
+		const escapeHtml = (value: string) =>
+			value.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] as string);
+
+		const postWord = (n: number) => `${n} post${n === 1 ? '' : 's'}`;
+
+		const render = (items: typeof index) => {
+			if (items.length === 0) {
+				list.innerHTML = '<li class="post-empty">No posts found.</li>';
+				return;
+			}
+			list.innerHTML = items
+				.map(
+					(post) => `<li class="post-item">
+	<h2 class="post-title"><a href="${post.url}">${escapeHtml(post.title)}</a></h2>
+	<p class="post-desc">${escapeHtml(post.description)}</p>
+	<div class="post-meta"><span>${escapeHtml(post.date)}</span><span aria-hidden="true">·</span><span>${post.minutes} min read</span></div>
+	${
+		post.tags.length
+			? `<ul class="tag-list">${post.tags
+					.map((tag: { label: string; url: string }) => `<li><a href="${tag.url}">#${escapeHtml(tag.label)}</a></li>`)
+					.join('')}</ul>`
+			: ''
+	}
+</li>`,
+				)
+				.join('');
+		};
+
+		const onInput = () => {
+			const query = input.value.trim().toLowerCase();
+			if (query === '') {
+				list.innerHTML = defaultHTML;
+				label.textContent = defaultLabel;
+				count.textContent = defaultCount;
+				if (pagination) pagination.hidden = false;
+				return;
+			}
+			const terms = query.split(/\s+/).filter(Boolean);
+			const results = index.filter((post: { search: string }) => terms.every((term) => post.search.includes(term)));
+			render(results);
+			label.textContent = 'Search results';
+			count.textContent = `(${postWord(results.length)})`;
+			if (pagination) pagination.hidden = true;
+		};
+
+		input.addEventListener('input', onInput);
+	}
+</script>
+
+<style>
+	.page-head {
+		display: flex;
+		align-items: flex-end;
+		justify-content: space-between;
+		gap: 1.5rem;
+		flex-wrap: wrap;
+		padding-block: 4rem 2.5rem;
+	}
+
+	.page-head h1 {
+		margin: 0;
+		font-size: clamp(2.2rem, 5vw, 3rem);
+		letter-spacing: -0.03em;
+	}
+
+	/* Keeps the count at its original size/style (it used to sit in a 1.15rem
+	   paragraph), even though it now lives inside the <h1>. */
+	.count {
+		font-size: 1.15rem;
+		font-weight: 400;
+		letter-spacing: normal;
+		color: var(--text-faint);
+		white-space: nowrap;
+	}
+
+	.search {
+		position: relative;
+		flex: 1 1 220px;
+		max-width: 280px;
+		margin-left: auto;
+	}
+
+	.search svg {
+		position: absolute;
+		top: 50%;
+		left: 0.75rem;
+		transform: translateY(-50%);
+		color: var(--text-faint);
+		pointer-events: none;
+	}
+
+	.search input {
+		width: 100%;
+		padding: 0.55rem 0.85rem 0.55rem 2.25rem;
+		border: 1px solid var(--border);
+		border-radius: 999px;
+		background: var(--bg-elevated);
+		color: var(--text);
+		font: inherit;
+		font-size: 0.95rem;
+	}
+
+	.search input::placeholder {
+		color: var(--text-faint);
+	}
+
+	.search input:focus {
+		outline: none;
+		border-color: var(--accent);
+	}
+</style>

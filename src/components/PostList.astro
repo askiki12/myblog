@@ -1,0 +1,35 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import FormattedDate from './FormattedDate.astro';
+import TagList from './TagList.astro';
+import { withBase } from '../consts';
+import { getReadingStats } from '../utils';
+
+interface Props {
+	posts: CollectionEntry<'blog'>[];
+}
+
+const { posts } = Astro.props;
+---
+
+<ul class="post-list" id="post-list">
+	{
+		posts.map((post) => {
+			const { minutes } = getReadingStats(post.body);
+			return (
+				<li class="post-item">
+					<h2 class="post-title">
+						<a href={withBase(`/blog/${post.id}/`)}>{post.data.title}</a>
+					</h2>
+					<p class="post-desc">{post.data.description}</p>
+					<div class="post-meta">
+						<FormattedDate date={post.data.pubDate} />
+						<span aria-hidden="true">·</span>
+						<span>{minutes} min read</span>
+					</div>
+					<TagList tags={post.data.tags} />
+				</li>
+			);
+		})
+	}
+</ul>

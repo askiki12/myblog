@@ -31,6 +31,19 @@ export function getReadingStats(body?: string): ReadingStats {
 	return { words, minutes };
 }
 
+/** Strip markdown/HTML down to plain text, for search indexing. */
+export function getPlainText(body?: string): string {
+	return (body ?? '')
+		.replace(/```[\s\S]*?```/g, ' ')
+		.replace(/`[^`]*`/g, ' ')
+		.replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
+		.replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+		.replace(/<[^>]+>/g, ' ')
+		.replace(/[#>*_~|]/g, ' ')
+		.replace(/\s+/g, ' ')
+		.trim();
+}
+
 /** Turn a human tag (e.g. "Web Dev") into a URL-safe slug ("web-dev"). */
 export function tagSlug(tag: string): string {
 	return tag

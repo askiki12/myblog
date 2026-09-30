@@ -1,0 +1,78 @@
+---
+interface Props {
+	currentPage: number;
+	totalPages: number;
+	prevUrl?: string | null;
+	nextUrl?: string | null;
+}
+
+const { currentPage, totalPages, prevUrl = null, nextUrl = null } = Astro.props;
+---
+
+{
+	totalPages > 1 && (
+		<nav class="pagination" aria-label="Pagination">
+			{prevUrl ? (
+				<a class="page-link" href={prevUrl} rel="prev">
+					&larr; Newer
+				</a>
+			) : (
+				<span class="page-link disabled" aria-disabled="true">
+					&larr; Newer
+				</span>
+			)}
+			<span class="page-info">
+				Page {currentPage} of {totalPages}
+			</span>
+			{nextUrl ? (
+				<a class="page-link" href={nextUrl} rel="next">
+					Older &rarr;
+				</a>
+			) : (
+				<span class="page-link disabled" aria-disabled="true">
+					Older &rarr;
+				</span>
+			)}
+		</nav>
+	)
+}
+
+<style>
+	.pagination {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+		margin-top: 2.5rem;
+	}
+
+	.page-link {
+		display: inline-flex;
+		align-items: center;
+		padding: 0.5rem 1rem;
+		border: 1px solid var(--border);
+		border-radius: 999px;
+		font-size: 0.9rem;
+		font-weight: 600;
+		color: var(--text);
+		text-decoration: none;
+		transition: border-color 0.15s ease, color 0.15s ease;
+	}
+
+	a.page-link:hover {
+		border-color: var(--accent);
+		color: var(--accent);
+		text-decoration: none;
+	}
+
+	.page-link.disabled {
+		color: var(--text-faint);
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	.page-info {
+		font-size: 0.85rem;
+		color: var(--text-faint);
+	}
+</style>

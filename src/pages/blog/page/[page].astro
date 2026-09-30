@@ -1,0 +1,42 @@
+---
+import { getCollection } from 'astro:content';
+import BlogIndex from '../../../layouts/BlogIndex.astro';
+import { POSTS_PER_PAGE, withBase } from '../../../consts';
+
+export async function getStaticPaths() {
+	const all = (await getCollection('blog', ({ data }) => !data.draft)).sort(
+		(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+	);
+	const totalPages = Math.max(1, Math.ceil(all.length / POSTS_PER_PAGE));
+
+	const paths = [];
+	for (let page = 2; page <= totalPages; page++) {
+		paths.push({
+			params: { page: String(page) },
+			props: {
+				page,
+				totalPages,
+				totalPosts: all.length,
+				allPosts: all,
+				posts: all.slice((page - 1) * POSTS_PER_PAGE, page * POSTS_PER_PAGE),
+			},
+		});
+	}
+	return paths;
+}
+
+const { page, totalPages, totalPosts, allPosts, posts } = Astro.props;
+
+const prevUrl = page - 1 === 1 ? withBase('/blog/') : withBase(`/blog/page/${page - 1}/`);
+const nextUrl = page + 1 <= totalPages ? withBase(`/blog/page/${page + 1}/`) : null;
+---
+
+<BlogIndex
+	posts={posts}
+	allPosts={allPosts}
+	totalPosts={totalPosts}
+	currentPage={page}
+	totalPages={totalPages}
+	prevUrl={prevUrl}
+	nextUrl={nextUrl}
+/>

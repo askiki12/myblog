@@ -7,6 +7,7 @@ export const AVATAR = '/avatar.svg';
 export const GITHUB = 'https://github.com/askiki12';
 
 export const SITE_TITLE = AUTHOR;
+export const POSTS_PER_PAGE = 6;
 export const SITE_DESCRIPTION =
 	'Personal blog of askiki — notes on code, research, learning, and life at university or work.';
 

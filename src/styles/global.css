@@ -355,3 +355,82 @@ details[open] > .tree-summary .chevron {
 	color: var(--text);
 	font-weight: 600;
 }
+
+/* ---------- Blog post list (global: also used by client-rendered search) ---------- */
+.post-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	border-top: 1px solid var(--border);
+}
+
+.post-item {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	padding-block: 1.8rem;
+	border-bottom: 1px solid var(--border);
+}
+
+.post-title {
+	margin: 0;
+	font-size: 1.45rem;
+}
+
+.post-title a {
+	color: var(--text);
+	text-decoration: none;
+}
+
+.post-title a:hover {
+	color: var(--accent);
+}
+
+.post-desc {
+	margin: 0;
+	max-width: 62ch;
+	color: var(--text-muted);
+}
+
+.post-meta {
+	display: flex;
+	align-items: center;
+	gap: 0.45rem;
+	font-size: 0.85rem;
+	color: var(--text-faint);
+}
+
+.post-empty {
+	padding-block: 2.5rem;
+	color: var(--text-muted);
+	list-style: none;
+}
+
+/* ---------- Tag list (global: also used by client-rendered search) ---------- */
+.tag-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.tag-list a {
+	display: inline-block;
+	padding: 0.15rem 0.6rem;
+	border: 1px solid var(--border);
+	border-radius: 999px;
+	background: var(--bg-muted);
+	font-size: 0.78rem;
+	color: var(--text-muted);
+	text-decoration: none;
+	transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.tag-list a:hover {
+	color: var(--accent);
+	border-color: var(--accent);
+	background: var(--accent-soft);
+	text-decoration: none;
+}
