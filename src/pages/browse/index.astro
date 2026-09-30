@@ -28,10 +28,6 @@ const tags = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeComp
 	<body>
 		<Header />
 		<main class="container">
-			<header class="page-head">
-				<h1>Browse</h1>
-			</header>
-
 			<section class="browse-section">
 				<div class="section-head">
 					<p class="eyebrow">Tags</p>
@@ -68,18 +64,8 @@ const tags = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeComp
 </html>
 
 <style>
-	.page-head {
-		padding-block: 4rem 1rem;
-	}
-
-	.page-head h1 {
-		margin: 0;
-		font-size: clamp(2.2rem, 5vw, 3rem);
-		letter-spacing: -0.03em;
-	}
-
 	.browse-section {
-		margin-top: 3.5rem;
+		margin-top: 4rem;
 	}
 
 	.section-head {

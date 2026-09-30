@@ -103,9 +103,17 @@ Cover behavior:
   wall (unchanged) and a full-page document tree (`src/components/BrowseTree.astro`,
   with `BrowseTreeNode`). The tree is a vertical, indented, collapsible tree that
   expands one level by default and has Expand all / Collapse all buttons; node counts
-  show descendant post counts. Tag detail pages live at `/browse/tag/<slug>/`; the old
-  `/tags/*` URLs render meta-refresh redirect pages (`src/pages/tags/`) and are excluded
-  from the sitemap.
+  show descendant post counts. On wide screens the tree is paired with a sticky
+  master–detail preview panel (`#browse-preview`) driven by a small vanilla `<script>`:
+  it defaults to the first post in tree order; hovering or focusing a `[data-post]` node
+  fills it (cover, description, date, reading time, tags, "Read post"); clicking
+  still navigates. Covers are shown only when the post sets `heroImage` (no fallback here)
+  and are pre-optimized via `getImage()` into the embedded JSON (`#browse-preview-index`).
+  On desktop the tree column scrolls inside its own container (`max-height: calc(100vh - 7rem)`)
+  so a long/fully-expanded tree never grows the page and the preview stays visible.
+  Without JS or at ≤1024px the panel is hidden and the tree stays fully usable. Tag detail pages
+  live at `/browse/tag/<slug>/`; the old `/tags/*` URLs render meta-refresh redirect
+  pages (`src/pages/tags/`) and are excluded from the sitemap.
 - **Blog index** (`src/layouts/BlogIndex.astro`) has a client-side search box
   (right-aligned, same row as the title). It embeds `#post-search-index` (all posts)
   and filters in the browser **on Enter** (empty + Enter returns to the "All posts"

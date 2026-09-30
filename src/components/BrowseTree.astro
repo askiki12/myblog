@@ -1,6 +1,8 @@
 ---
 import type { CollectionEntry } from 'astro:content';
-import { buildPostTree } from '../utils';
+import { getImage } from 'astro:assets';
+import { buildPostTree, flattenPostsInTree, getReadingStats, tagSlug } from '../utils';
+import { withBase } from '../consts';
 import BrowseTreeNode from './BrowseTreeNode.astro';
 
 interface Props {
@@ -9,27 +11,135 @@ interface Props {
 
 const { posts } = Astro.props;
 const tree = buildPostTree(posts);
+
+// Preview data, in the same order as the tree (DFS pre-order). Covers are only
+// included for posts that actually set a `heroImage` (no fallback here).
+const previewIndex = await Promise.all(
+	flattenPostsInTree(tree).map(async (post) => {
+		const { minutes } = getReadingStats(post.body);
+		const cover = post.data.heroImage ? (await getImage({ src: post.data.heroImage, width: 640 })).src : null;
+		return {
+			id: post.id,
+			url: withBase(`/blog/${post.id}/`),
+			title: post.data.title,
+			description: post.data.description,
+			date: post.data.pubDate.toLocaleDateString('en-us', {
+				year: 'numeric',
+				month: 'short',
+				day: 'numeric',
+			}),
+			minutes,
+			tags: post.data.tags.map((tag) => ({ label: tag, url: withBase(`/browse/tag/${tagSlug(tag)}/`) })),
+			cover,
+		};
+	}),
+);
+const first = previewIndex[0] ?? null;
+const previewJson = JSON.stringify(previewIndex).replace(/</g, '\\u003c');
 ---
 
-<div class="browse-tree" id="browse-tree">
-	<div class="browse-toolbar">
-		<button id="tree-expand-all" type="button" class="tree-btn">Expand all</button>
-		<button id="tree-collapse-all" type="button" class="tree-btn">Collapse all</button>
+<div class="browse-tree-layout">
+	<div class="browse-tree" id="browse-tree">
+		<div class="browse-toolbar">
+			<button id="tree-expand-all" type="button" class="tree-btn">Expand all</button>
+			<button id="tree-collapse-all" type="button" class="tree-btn">Collapse all</button>
+		</div>
+		<ul class="browse-list">
+			<BrowseTreeNode node={tree} isRoot={true} />
+		</ul>
 	</div>
-	<ul class="browse-list">
-		<BrowseTreeNode node={tree} isRoot={true} />
-	</ul>
+
+	<aside class="browse-preview" id="browse-preview" aria-label="Post preview">
+		{
+			first && (
+				<div class="preview-card" id="preview-card">
+					<div class="preview-cover" id="preview-cover-wrap" hidden={!first.cover}>
+						<img id="preview-cover" src={first.cover ?? undefined} alt={first.title} loading="lazy" />
+					</div>
+					<h3 class="preview-title" id="preview-title">
+						{first.title}
+					</h3>
+					<p class="preview-desc" id="preview-desc">
+						{first.description}
+					</p>
+					<div class="preview-meta" id="preview-meta">
+						{first.date} · {first.minutes} min read
+					</div>
+					<ul class="tag-list" id="preview-tags">
+						{first.tags.map((tag) => (
+							<li>
+								<a href={tag.url}>#{tag.label}</a>
+							</li>
+						))}
+					</ul>
+					<a class="preview-cta" id="preview-cta" href={first.url}>
+						Read post <span aria-hidden="true">&rarr;</span>
+					</a>
+				</div>
+			)
+		}
+	</aside>
 </div>
 
+<script type="application/json" id="browse-preview-index" is:inline set:html={previewJson}></script>
+
 <script>
-	const tree = document.getElementById('browse-tree');
+	const treeEl = document.getElementById('browse-tree');
+	const indexEl = document.getElementById('browse-preview-index');
+	const card = document.getElementById('preview-card');
+
+	if (treeEl && indexEl && card) {
+		const data = JSON.parse(indexEl.textContent || '[]');
+		const byId = new Map(data.map((post) => [post.id, post]));
+		const escapeHtml = (value) =>
+			String(value).replace(
+				/[&<>"']/g,
+				(c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c],
+			);
+
+		const showPreview = (post) => {
+			const coverWrap = document.getElementById('preview-cover-wrap');
+			const coverImg = document.getElementById('preview-cover');
+			const title = document.getElementById('preview-title');
+			const desc = document.getElementById('preview-desc');
+			const meta = document.getElementById('preview-meta');
+			const tags = document.getElementById('preview-tags');
+			const cta = document.getElementById('preview-cta');
+			if (post.cover) {
+				if (coverImg) {
+					coverImg.src = post.cover;
+					coverImg.alt = post.title;
+				}
+				if (coverWrap) coverWrap.hidden = false;
+			} else if (coverWrap) {
+				coverWrap.hidden = true;
+			}
+			if (title) title.textContent = post.title;
+			if (desc) desc.textContent = post.description;
+			if (meta) meta.textContent = `${post.date} · ${post.minutes} min read`;
+			if (tags) tags.innerHTML = post.tags.map((tag) => `<li><a href="${tag.url}">#${escapeHtml(tag.label)}</a></li>`).join('');
+			if (cta) cta.href = post.url;
+			card.hidden = false;
+		};
+
+		const onEnter = (event) => {
+			const link = event.target.closest('[data-post]');
+			const id = link ? link.getAttribute('data-post') : null;
+			const post = id ? byId.get(id) : null;
+			if (post) showPreview(post);
+		};
+
+		treeEl.addEventListener('mouseover', onEnter);
+		treeEl.addEventListener('focusin', onEnter);
+	}
+
 	document.getElementById('tree-expand-all')?.addEventListener('click', () => {
-		tree?.querySelectorAll('details').forEach((details) => {
+		treeEl?.querySelectorAll('details').forEach((details) => {
 			details.open = true;
 		});
 	});
 	document.getElementById('tree-collapse-all')?.addEventListener('click', () => {
-		tree?.querySelectorAll('details').forEach((details) => {
+		treeEl?.querySelectorAll('details').forEach((details) => {
 			details.open = false;
 		});
 	});
@@ -37,3 +147,106 @@ const tree = buildPostTree(posts);
 		link.addEventListener('click', (event) => event.stopPropagation());
 	});
 </script>
+
+<style>
+	.browse-tree-layout {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) 360px;
+		gap: 2.5rem;
+		align-items: start;
+	}
+
+	.browse-preview {
+		position: sticky;
+		top: 5rem;
+	}
+
+	.preview-card {
+		overflow: hidden;
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		background: var(--bg-elevated);
+		box-shadow: var(--shadow-sm);
+	}
+
+	.preview-cover {
+		aspect-ratio: 16 / 9;
+		background: var(--bg-muted);
+	}
+
+	.preview-cover img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	.preview-title {
+		margin: 1rem 1.1rem 0.4rem;
+		font-size: 1.15rem;
+		line-height: 1.35;
+	}
+
+	.preview-desc {
+		display: -webkit-box;
+		margin: 0 1.1rem 0.75rem;
+		overflow: hidden;
+		font-size: 0.9rem;
+		line-height: 1.55;
+		color: var(--text-muted);
+		overflow-wrap: anywhere;
+		-webkit-line-clamp: 5;
+		line-clamp: 5;
+		-webkit-box-orient: vertical;
+	}
+
+	.preview-meta {
+		margin: 0 1.1rem 0.7rem;
+		font-size: 0.8rem;
+		color: var(--text-faint);
+	}
+
+	.preview-card .tag-list {
+		margin: 0 1.1rem 1rem;
+	}
+
+	.preview-cta {
+		display: block;
+		margin: 0 1.1rem 1.1rem;
+		padding: 0.55rem 1rem;
+		border-radius: 999px;
+		background: var(--accent);
+		color: #fff;
+		text-align: center;
+		font-size: 0.9rem;
+		font-weight: 600;
+		text-decoration: none;
+	}
+
+	.preview-cta:hover {
+		background: var(--accent-hover);
+		color: #fff;
+		text-decoration: none;
+	}
+
+	/* On desktop the tree scrolls inside its own column, so a long (fully
+	   expanded) tree never grows the page and the preview stays put. */
+	@media (min-width: 1025px) {
+		.browse-tree {
+			max-height: calc(100vh - 7rem);
+			padding-right: 0.5rem;
+			overflow-y: auto;
+			overscroll-behavior: contain;
+		}
+	}
+
+	@media (max-width: 1024px) {
+		.browse-tree-layout {
+			grid-template-columns: minmax(0, 1fr);
+		}
+
+		.browse-preview {
+			display: none;
+		}
+	}
+</style>

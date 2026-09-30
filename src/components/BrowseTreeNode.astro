@@ -22,7 +22,7 @@ const linkable = isRoot || Boolean(node.post);
 				<summary class="browse-summary">
 					<span class="browse-chevron" aria-hidden="true" />
 					{linkable ? (
-						<a class="browse-link" href={href}>
+						<a class="browse-link" href={href} data-post={node.post ? node.path : undefined}>
 							{node.title}
 						</a>
 					) : (
@@ -42,7 +42,7 @@ const linkable = isRoot || Boolean(node.post);
 			<div class="browse-leaf">
 				<span class="browse-chevron spacer" aria-hidden="true" />
 				{linkable ? (
-					<a class="browse-link" href={href}>
+					<a class="browse-link" href={href} data-post={node.post ? node.path : undefined}>
 						{node.title}
 					</a>
 				) : (
