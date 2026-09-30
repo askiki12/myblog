@@ -101,9 +101,10 @@ Cover behavior:
 - **Post header order**: title → description → date/reading → tags.
 - **Blog index** (`src/layouts/BlogIndex.astro`) has a client-side search box
   (right-aligned, same row as the title). It embeds `#post-search-index` (all posts)
-  and filters in the browser; the heading switches from "All posts (N posts)" to
-  "Search results (M posts)". Pagination is server-side (`POSTS_PER_PAGE` in
-  `src/consts.ts`), page 1 at `/blog/`, then `/blog/page/N/`.
+  and filters in the browser **on Enter** (empty + Enter returns to the "All posts"
+  view); the heading switches from "All posts (N posts)" to "Search results (M posts)".
+  Pagination is server-side (`POSTS_PER_PAGE` in `src/consts.ts`), page 1 at `/blog/`,
+  then `/blog/page/N/`.
 
 ## Pitfalls (learned on this project)
 

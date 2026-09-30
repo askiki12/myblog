@@ -56,13 +56,20 @@ const indexJson = JSON.stringify(searchIndex).replace(/</g, '\\u003c');
 						<span id="page-title-label">All posts</span>{' '}<span class="count" id="page-count">({totalPosts} posts)</span>
 					</h1>
 				</div>
-				<div class="search">
+				<form class="search" id="blog-search-form" role="search">
 					<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
 						<circle cx="11" cy="11" r="7"></circle>
 						<line x1="16" y1="16" x2="21" y2="21"></line>
 					</svg>
-					<input id="blog-search" type="search" placeholder="Search posts…" aria-label="Search posts" autocomplete="off" />
-				</div>
+					<input
+						id="blog-search"
+						type="search"
+						name="q"
+						placeholder="Search posts…"
+						aria-label="Search posts"
+						autocomplete="off"
+					/>
+				</form>
 			</header>
 
 			<PostList posts={posts} />
@@ -78,6 +85,7 @@ const indexJson = JSON.stringify(searchIndex).replace(/</g, '\\u003c');
 </html>
 
 <script>
+	const form = document.getElementById('blog-search-form') as HTMLFormElement | null;
 	const input = document.getElementById('blog-search') as HTMLInputElement | null;
 	const list = document.getElementById('post-list');
 	const label = document.getElementById('page-title-label');
@@ -85,7 +93,7 @@ const indexJson = JSON.stringify(searchIndex).replace(/</g, '\\u003c');
 	const pagination = document.getElementById('blog-pagination');
 	const indexEl = document.getElementById('post-search-index');
 
-	if (input && list && indexEl && label && count) {
+	if (form && input && list && indexEl && label && count) {
 		const index = JSON.parse(indexEl.textContent || '[]');
 		const defaultHTML = list.innerHTML;
 		const defaultLabel = label.textContent ?? '';
@@ -119,7 +127,7 @@ const indexJson = JSON.stringify(searchIndex).replace(/</g, '\\u003c');
 				.join('');
 		};
 
-		const onInput = () => {
+		const runSearch = () => {
 			const query = input.value.trim().toLowerCase();
 			if (query === '') {
 				list.innerHTML = defaultHTML;
@@ -136,7 +144,10 @@ const indexJson = JSON.stringify(searchIndex).replace(/</g, '\\u003c');
 			if (pagination) pagination.hidden = true;
 		};
 
-		input.addEventListener('input', onInput);
+		form.addEventListener('submit', (event) => {
+			event.preventDefault();
+			runSearch();
+		});
 	}
 </script>
 
