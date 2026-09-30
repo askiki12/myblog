@@ -1,86 +1,58 @@
 # askiki's blog
 
-A personal blog built with [Astro](https://astro.build), deployed to GitHub Pages
-at **https://askiki12.github.io/myblog/**.
+Hi, I'm **askiki**, a student at Nanjing University. This is my personal blog: notes on
+code, research, learning, and life at university or work. It's built with
+[Astro](https://astro.build) and deployed to GitHub Pages.
 
-## Features
+**Read online:** https://askiki12.github.io/myblog/
 
-- Markdown / MDX posts with typed frontmatter (Zod) and draft support
-- Dark theme by default, light theme toggle (persisted, no flash)
-- Home page with profile, latest posts and topics
-- Blog index with search and pagination
-- Browse page: a tags wall and a full-page document tree
-- Per-post table of contents and a document tree for navigating between posts
-- RSS and sitemap
-- Reading time and word count
-- Home cards get a deterministic fallback cover; post pages show a cover only when set
+---
 
-## Commands
+## Using this blog as a template
 
-All commands run from the project root:
+If you'd like to use this framework for your own blog:
 
-| Command             | Action                                       |
-| :------------------ | :------------------------------------------- |
-| `npm install`       | Install dependencies                         |
-| `npm run dev`       | Start the dev server                         |
-| `npm run build`     | Build the production site to `./dist/`       |
-| `npm run preview`   | Preview the production build locally         |
-| `npm run astro ...` | Run Astro CLI commands (e.g. `astro check`)  |
+1. **Get the code** — fork or clone this repository.
+2. **Install and run**:
+   ```sh
+   npm install
+   npm run dev     # local preview
+   npm run build   # production build into ./dist/
+   ```
+3. **Make it yours** — edit your name, school, links and site description in
+   [`src/consts.ts`](./src/consts.ts).
+4. **Deploy** — push to `main`; the GitHub Actions workflow builds and publishes to
+   GitHub Pages. Enable **Settings → Pages → Source = GitHub Actions**. If you rename
+   the repo, update `site` and `base` in [`astro.config.mjs`](./astro.config.mjs).
 
-## Project structure
+### Where to put posts and what format to use
 
-```text
-src/
-├── assets/              # shared images + cover fallbacks (covers/)
-├── components/          # Header, Footer, PostCard, DocumentTree, TableOfContents, ...
-├── content/
-│   └── blog/            # posts (one directory per post)
-├── layouts/
-│   └── BlogPost.astro   # article layout (tree | article | TOC)
-├── pages/               # routes: /, /blog, /browse, /about, /rss.xml
-├── styles/global.css    # theme tokens + base styles
-├── consts.ts            # site title, author, links
-├── covers.ts            # heroImage fallback picker
-├── utils.ts             # reading stats, tag slug, post tree
-└── content.config.ts    # content collection + schema + generateId
-```
-
-## Writing a post
-
-Posts live in `src/content/blog/`, **one directory per post**:
+**One post = one directory** under `src/content/blog/`:
 
 ```text
 src/content/blog/my-post/
-├── index.md          # body + frontmatter (or index.mdx)
-├── assets/           # images for this post (referenced relatively)
+├── index.md          # the post body + fields (or index.mdx)
+├── assets/           # images for this post, referenced relatively
 └── childrenBlogs/    # optional nested posts
     └── child/
         └── index.md
 ```
 
+A post is a Markdown (or MDX) file named `index.md`. The directory name becomes the URL
+slug (`src/content/blog/my-post/index.md` → `/blog/my-post/`). Fields go in the
+frontmatter:
+
 ```md
 ---
-title: My post
-description: A one-line summary.
-pubDate: 2026-09-29
-heroImage: './assets/cover.jpg'   # optional
-tags: ['astro', 'guide']          # optional
+title: My post            # required
+description: A one-line summary.   # required
+pubDate: 2026-09-29       # required
+heroImage: './assets/cover.jpg'    # optional
+tags: ['astro', 'guide']  # optional
+draft: false              # optional (true hides it)
 ---
 
-Body written in Markdown. Images: `![alt](./assets/pic.png)`.
+Write the body in Markdown. Add images with `![alt](./assets/pic.png)`.
 ```
 
-`title`, `description` and `pubDate` are required; the build fails if they are missing.
-See [`AGENTS.md`](./AGENTS.md) for the full conventions (URL mapping, `childrenBlogs`,
-cover behavior, layout tokens).
-
-## Deployment
-
-Pushing to `main` triggers the GitHub Actions workflow in
-`.github/workflows/deploy.yml`, which builds the site and publishes it to GitHub Pages.
-The repo must have **Settings → Pages → Source = GitHub Actions** enabled.
-
-## Credits
-
-Initial scaffolding from the [Astro blog template](https://github.com/withastro/astro),
-originally based on [Bear Blog](https://github.com/HermanMartinus/bearblog/).
+See [`AGENTS.md`](./AGENTS.md) for the full content conventions.

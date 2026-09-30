@@ -2,7 +2,7 @@
 import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import { AUTHOR, AVATAR, SCHOOL, SITE_TITLE, withBase } from '../consts';
+import { AUTHOR, AVATAR, GITHUB, SCHOOL, SITE_TITLE, withBase } from '../consts';
 ---
 
 <!doctype html>
@@ -13,34 +13,36 @@ import { AUTHOR, AVATAR, SCHOOL, SITE_TITLE, withBase } from '../consts';
 	<body>
 		<Header />
 		<main class="container">
-			<div class="about-head">
-				<img class="avatar" src={withBase(AVATAR)} alt={AUTHOR} width="112" height="112" />
-				<div>
-					<p class="eyebrow">About</p>
-					<h1>{AUTHOR}</h1>
-					<p class="school">{SCHOOL}</p>
+			<div class="about">
+				<header class="about-head">
+					<img class="avatar" src={withBase(AVATAR)} alt={AUTHOR} width="128" height="128" />
+					<div>
+						<h1>{AUTHOR}</h1>
+						<p class="school">{SCHOOL}</p>
+						<p class="tagline">Notes on code, research, learning, and life.</p>
+					</div>
+				</header>
+
+				<div class="prose about-body">
+					<h2>About</h2>
+					<p>
+						Hi, I'm {AUTHOR} — a student at {SCHOOL}. This blog is where I keep notes on what I'm
+						learning and building, so I can look back on it later.
+					</p>
+
+					<h2>What I write about</h2>
+					<ul>
+						<li>Software, systems, and the tools I use day to day</li>
+						<li>Notes from coursework and side projects</li>
+						<li>Things I wish I'd known earlier</li>
+					</ul>
+
+					<h2>Get in touch</h2>
+					<p>
+						The best place to reach me is <a href={GITHUB} target="_blank" rel="noopener">GitHub</a>.
+						More links are in the footer.
+					</p>
 				</div>
-			</div>
-
-			<div class="prose about-body">
-				<p>
-					Hi, I'm {AUTHOR} — a student at {SCHOOL}. This is where I write about the things I'm learning:
-					software, systems, and the occasional rabbit hole.
-				</p>
-
-				<h2>What I write about</h2>
-				<ul>
-					<li>Web development and the tools I use day to day</li>
-					<li>Notes from coursework and side projects</li>
-					<li>Things I wish I'd known earlier</li>
-				</ul>
-
-				<h2>Get in touch</h2>
-				<p>
-					The best place to reach me is <a href="https://github.com/askiki12" target="_blank" rel="noopener"
-						>GitHub</a
-					>. More links are in the footer.
-				</p>
 			</div>
 		</main>
 		<Footer />
@@ -48,35 +50,50 @@ import { AUTHOR, AVATAR, SCHOOL, SITE_TITLE, withBase } from '../consts';
 </html>
 
 <style>
+	.about {
+		max-width: 720px;
+		margin-inline: auto;
+		padding-block: 4.5rem;
+	}
+
 	.about-head {
 		display: flex;
 		align-items: center;
 		gap: 1.75rem;
-		padding-block: 4.5rem 2rem;
+		margin-bottom: 2.5rem;
 	}
 
 	.avatar {
 		flex: none;
-		width: 112px;
-		height: 112px;
+		width: 128px;
+		height: 128px;
 		border-radius: 50%;
 		border: 2px solid var(--border);
 	}
 
 	.about-head h1 {
-		margin: 0.25rem 0;
+		margin: 0 0 0.2rem;
 		font-size: clamp(2rem, 5vw, 2.75rem);
 		letter-spacing: -0.03em;
 	}
 
 	.school {
-		margin: 0;
+		margin: 0 0 0.4rem;
 		font-weight: 600;
 		color: var(--accent);
 	}
 
-	.about-body {
-		max-width: 680px;
+	.tagline {
+		margin: 0;
+		color: var(--text-muted);
+	}
+
+	.about-body h2 {
+		margin-top: 2.25rem;
+	}
+
+	.about-body :first-child {
+		margin-top: 0;
 	}
 
 	@media (max-width: 560px) {
