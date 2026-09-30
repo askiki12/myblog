@@ -434,3 +434,134 @@ details[open] > .tree-summary .chevron {
 	background: var(--accent-soft);
 	text-decoration: none;
 }
+
+/* ---------- Browse tree (full page) ---------- */
+.browse-tree {
+	font-size: 1rem;
+}
+
+.browse-toolbar {
+	display: flex;
+	gap: 0.5rem;
+	margin-bottom: 1.25rem;
+}
+
+.tree-btn {
+	padding: 0.4rem 0.85rem;
+	border: 1px solid var(--border);
+	border-radius: 999px;
+	background: var(--bg-elevated);
+	color: var(--text-muted);
+	font: inherit;
+	font-size: 0.85rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.tree-btn:hover {
+	color: var(--accent);
+	border-color: var(--accent);
+}
+
+.browse-list,
+.browse-children {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.browse-list {
+	padding-top: 0.75rem;
+	border-top: 1px solid var(--border);
+}
+
+.browse-children {
+	margin-left: 0.85rem;
+	padding-left: 1.1rem;
+	border-left: 1px solid var(--border);
+}
+
+.browse-node {
+	margin: 0.1rem 0;
+}
+
+.browse-summary,
+.browse-leaf {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.4rem 0.6rem;
+	border-radius: 8px;
+	line-height: 1.5;
+}
+
+.browse-summary {
+	list-style: none;
+	cursor: pointer;
+}
+
+.browse-summary::-webkit-details-marker {
+	display: none;
+}
+
+.browse-summary:hover,
+.browse-leaf:hover {
+	background: var(--bg-muted);
+}
+
+.browse-chevron {
+	flex: none;
+	width: 0.45rem;
+	height: 0.45rem;
+	border-right: 1.5px solid currentColor;
+	border-bottom: 1.5px solid currentColor;
+	transform: rotate(-45deg);
+	transition: transform 0.15s ease;
+	opacity: 0.55;
+}
+
+.browse-chevron.spacer {
+	border: 0;
+}
+
+details[open] > .browse-summary .browse-chevron {
+	transform: rotate(45deg);
+}
+
+.browse-link,
+.browse-label {
+	flex: 1;
+	min-width: 0;
+}
+
+.browse-link {
+	color: var(--text);
+	text-decoration: none;
+}
+
+.browse-link:hover {
+	color: var(--accent);
+	text-decoration: underline;
+}
+
+.browse-label {
+	color: var(--text);
+	font-weight: 600;
+}
+
+.browse-node.root > details > .browse-summary .browse-link {
+	font-weight: 700;
+}
+
+.browse-count {
+	flex: none;
+	min-width: 1.6rem;
+	padding: 0.05rem 0.45rem;
+	border: 1px solid var(--border);
+	border-radius: 999px;
+	background: var(--bg-elevated);
+	font-size: 0.72rem;
+	color: var(--text-faint);
+	text-align: center;
+}

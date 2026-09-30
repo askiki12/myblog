@@ -1,0 +1,39 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { buildPostTree } from '../utils';
+import BrowseTreeNode from './BrowseTreeNode.astro';
+
+interface Props {
+	posts: CollectionEntry<'blog'>[];
+}
+
+const { posts } = Astro.props;
+const tree = buildPostTree(posts);
+---
+
+<div class="browse-tree" id="browse-tree">
+	<div class="browse-toolbar">
+		<button id="tree-expand-all" type="button" class="tree-btn">Expand all</button>
+		<button id="tree-collapse-all" type="button" class="tree-btn">Collapse all</button>
+	</div>
+	<ul class="browse-list">
+		<BrowseTreeNode node={tree} isRoot={true} />
+	</ul>
+</div>
+
+<script>
+	const tree = document.getElementById('browse-tree');
+	document.getElementById('tree-expand-all')?.addEventListener('click', () => {
+		tree?.querySelectorAll('details').forEach((details) => {
+			details.open = true;
+		});
+	});
+	document.getElementById('tree-collapse-all')?.addEventListener('click', () => {
+		tree?.querySelectorAll('details').forEach((details) => {
+			details.open = false;
+		});
+	});
+	document.querySelectorAll('.browse-summary a').forEach((link) => {
+		link.addEventListener('click', (event) => event.stopPropagation());
+	});
+</script>

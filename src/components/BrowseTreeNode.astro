@@ -1,0 +1,54 @@
+---
+import type { TreeNode } from '../utils';
+import { withBase } from '../consts';
+import Self from './BrowseTreeNode.astro';
+
+interface Props {
+	node: TreeNode;
+	depth?: number;
+	isRoot?: boolean;
+}
+
+const { node, depth = 0, isRoot = false } = Astro.props;
+const href = isRoot ? withBase('/') : withBase(`/blog/${node.path}/`);
+const hasChildren = node.children.length > 0;
+const linkable = isRoot || Boolean(node.post);
+---
+
+<li class:list={['browse-node', { root: isRoot }]}>
+	{
+		hasChildren ? (
+			<details open={depth === 0}>
+				<summary class="browse-summary">
+					<span class="browse-chevron" aria-hidden="true" />
+					{linkable ? (
+						<a class="browse-link" href={href}>
+							{node.title}
+						</a>
+					) : (
+						<span class="browse-label">{node.title}</span>
+					)}
+					<span class="browse-count" title={`${node.count} posts`}>
+						{node.count}
+					</span>
+				</summary>
+				<ul class="browse-children">
+					{node.children.map((child) => (
+						<Self node={child} depth={depth + 1} />
+					))}
+				</ul>
+			</details>
+		) : (
+			<div class="browse-leaf">
+				<span class="browse-chevron spacer" aria-hidden="true" />
+				{linkable ? (
+					<a class="browse-link" href={href}>
+						{node.title}
+					</a>
+				) : (
+					<span class="browse-label">{node.title}</span>
+				)}
+			</div>
+		)
+	}
+</li>

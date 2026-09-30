@@ -60,7 +60,7 @@ Frontmatter fields (`src/content.config.ts`):
 | `pubDate` | yes | Sort/date; e.g. `2026-09-29` |
 | `updatedDate` | no | Shows "Updated …" when set |
 | `heroImage` | no | Relative path, e.g. `./assets/cover.jpg`; Astro optimizes it |
-| `tags` | no | Array, defaults to `[]`; drives `/tags/*` pages |
+| `tags` | no | Array, defaults to `[]`; drives `/browse/tag/*` pages |
 | `draft` | no | Defaults to `false`; `true` hides it everywhere (no page built) |
 
 Missing required fields are hard errors (Zod validation, build fails). Missing optional fields:
@@ -99,6 +99,13 @@ Cover behavior:
 - **Footer sticks to the bottom**: `body` is a flex column and `.post-shell` uses
   `flex: 1 0 auto`.
 - **Post header order**: title → description → date/reading → tags.
+- **Browse page** (`src/pages/browse/index.astro`): two stacked sections — the Tags
+  wall (unchanged) and a full-page document tree (`src/components/BrowseTree.astro`,
+  with `BrowseTreeNode`). The tree is a vertical, indented, collapsible tree that
+  expands one level by default and has Expand all / Collapse all buttons; node counts
+  show descendant post counts. Tag detail pages live at `/browse/tag/<slug>/`; the old
+  `/tags/*` URLs render meta-refresh redirect pages (`src/pages/tags/`) and are excluded
+  from the sitemap.
 - **Blog index** (`src/layouts/BlogIndex.astro`) has a client-side search box
   (right-aligned, same row as the title). It embeds `#post-search-index` (all posts)
   and filters in the browser **on Enter** (empty + Enter returns to the "All posts"

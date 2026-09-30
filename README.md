@@ -8,8 +8,10 @@ at **https://askiki12.github.io/myblog/**.
 - Markdown / MDX posts with typed frontmatter (Zod) and draft support
 - Dark theme by default, light theme toggle (persisted, no flash)
 - Home page with profile, latest posts and topics
-- Blog index, per-tag pages, RSS and sitemap
+- Blog index with search and pagination
+- Browse page: a tags wall and a full-page document tree
 - Per-post table of contents and a document tree for navigating between posts
+- RSS and sitemap
 - Reading time and word count
 - Home cards get a deterministic fallback cover; post pages show a cover only when set
 
@@ -35,7 +37,7 @@ src/
 │   └── blog/            # posts (one directory per post)
 ├── layouts/
 │   └── BlogPost.astro   # article layout (tree | article | TOC)
-├── pages/               # routes: /, /blog, /tags, /about, /rss.xml
+├── pages/               # routes: /, /blog, /browse, /about, /rss.xml
 ├── styles/global.css    # theme tokens + base styles
 ├── consts.ts            # site title, author, links
 ├── covers.ts            # heroImage fallback picker

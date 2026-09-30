@@ -15,7 +15,7 @@ const { tags = [], class: className } = Astro.props;
 		<ul class:list={['tag-list', className]}>
 			{tags.map((tag) => (
 				<li>
-					<a href={withBase(`/tags/${tagSlug(tag)}/`)}>#{tag}</a>
+					<a href={withBase(`/browse/tag/${tagSlug(tag)}/`)}>#{tag}</a>
 				</li>
 			))}
 		</ul>

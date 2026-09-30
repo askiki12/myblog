@@ -59,6 +59,8 @@ export interface TreeNode {
 	title: string;
 	post?: CollectionEntry<'blog'>;
 	children: TreeNode[];
+	/** Number of posts in this subtree (including the node's own post, if any). */
+	count: number;
 }
 
 /**
@@ -66,7 +68,7 @@ export interface TreeNode {
  * nodes; the root node represents the home page.
  */
 export function buildPostTree(posts: CollectionEntry<'blog'>[]): TreeNode {
-	const root: TreeNode = { name: '', path: '', title: 'Home', children: [] };
+	const root: TreeNode = { name: '', path: '', title: 'Home', children: [], count: 0 };
 
 	for (const post of posts) {
 		const parts = post.id.split('/');
@@ -77,7 +79,7 @@ export function buildPostTree(posts: CollectionEntry<'blog'>[]): TreeNode {
 			acc = acc ? `${acc}/${part}` : part;
 			let child = node.children.find((entry) => entry.name === part);
 			if (!child) {
-				child = { name: part, path: acc, title: part.replace(/[-_]/g, ' '), children: [] };
+				child = { name: part, path: acc, title: part.replace(/[-_]/g, ' '), children: [], count: 0 };
 				node.children.push(child);
 			}
 			if (index === parts.length - 1) {
@@ -88,11 +90,12 @@ export function buildPostTree(posts: CollectionEntry<'blog'>[]): TreeNode {
 		});
 	}
 
-	const sort = (node: TreeNode) => {
+	const finalize = (node: TreeNode): number => {
 		node.children.sort((a, b) => a.title.localeCompare(b.title));
-		node.children.forEach(sort);
+		node.count = (node.post ? 1 : 0) + node.children.reduce((sum, child) => sum + finalize(child), 0);
+		return node.count;
 	};
-	sort(root);
+	finalize(root);
 
 	return root;
 }

@@ -1,85 +1,38 @@
 ---
-import type { CollectionEntry } from 'astro:content';
 import { getCollection } from 'astro:content';
-import BaseHead from '../../components/BaseHead.astro';
-import Footer from '../../components/Footer.astro';
-import Header from '../../components/Header.astro';
-import PostCard from '../../components/PostCard.astro';
-import { SITE_TITLE, withBase } from '../../consts';
+import { withBase } from '../../consts';
 import { tagSlug } from '../../utils';
 
 export async function getStaticPaths() {
 	const posts = await getCollection('blog', ({ data }) => !data.draft);
 	const tags = [...new Set(posts.flatMap((post) => post.data.tags))];
 
-	return tags.map((tag) => ({
-		params: { tag: tagSlug(tag) },
-		props: {
-			tag,
-			posts: posts
-				.filter((post) => post.data.tags.includes(tag))
-				.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()),
-		},
-	}));
+	return tags.map((tag) => {
+		const slug = tagSlug(tag);
+		return {
+			params: { tag: slug },
+			props: { target: withBase(`/browse/tag/${slug}/`) },
+		};
+	});
 }
 
 interface Props {
-	tag: string;
-	posts: CollectionEntry<'blog'>[];
+	target: string;
 }
 
-const { tag, posts } = Astro.props;
+const { target } = Astro.props;
 ---
 
 <!doctype html>
 <html lang="en">
 	<head>
-		<BaseHead title={`#${tag} | ${SITE_TITLE}`} description={`Posts tagged “${tag}”.`} />
+		<meta charset="utf-8" />
+		<meta name="robots" content="noindex" />
+		<meta http-equiv="refresh" content={`0; url=${target}`} />
+		<link rel="canonical" href={target} />
+		<title>Redirecting…</title>
 	</head>
 	<body>
-		<Header />
-		<main class="container">
-			<header class="page-head">
-				<p class="eyebrow">Tag</p>
-				<h1>#{tag}</h1>
-				<p class="lead">{posts.length} posts</p>
-			</header>
-
-			<div class="post-grid">
-				{posts.map((post) => <PostCard post={post} />)}
-			</div>
-
-			<p class="back">
-				<a href={withBase('/tags')}>&larr; All tags</a>
-			</p>
-		</main>
-		<Footer />
+		<p>Redirecting to <a href={target}>{target}</a>…</p>
 	</body>
 </html>
-
-<style>
-	.page-head {
-		padding-block: 4rem 2.5rem;
-	}
-
-	.page-head h1 {
-		margin: 0 0 0.5rem;
-		font-size: clamp(2.2rem, 5vw, 3rem);
-		letter-spacing: -0.03em;
-	}
-
-	.lead {
-		margin: 0;
-		color: var(--text-muted);
-	}
-
-	.post-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-		gap: 1.5rem;
-	}
-
-	.back {
-		margin-top: 2.5rem;
-	}
-</style>

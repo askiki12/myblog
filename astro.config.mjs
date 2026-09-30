@@ -8,7 +8,11 @@ import { defineConfig, fontProviders } from 'astro/config';
 export default defineConfig({
 	site: 'https://askiki12.github.io',
 	base: '/myblog',
-	integrations: [mdx(), sitemap()],
+	integrations: [
+		mdx(),
+		// Exclude the legacy /tags/ redirect pages from the sitemap.
+		sitemap({ filter: (page) => !page.includes('/tags/') }),
+	],
 	fonts: [
 		{
 			provider: fontProviders.local(),

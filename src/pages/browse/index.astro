@@ -1,0 +1,137 @@
+---
+import { getCollection } from 'astro:content';
+import BaseHead from '../../components/BaseHead.astro';
+import Footer from '../../components/Footer.astro';
+import Header from '../../components/Header.astro';
+import BrowseTree from '../../components/BrowseTree.astro';
+import { SITE_TITLE, withBase } from '../../consts';
+import { tagSlug } from '../../utils';
+
+const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
+	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+
+const counts = new Map<string, number>();
+for (const post of posts) {
+	for (const tag of post.data.tags) {
+		counts.set(tag, (counts.get(tag) ?? 0) + 1);
+	}
+}
+const tags = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={`Browse | ${SITE_TITLE}`} description="Browse posts by topic or by the document tree." />
+	</head>
+	<body>
+		<Header />
+		<main class="container">
+			<header class="page-head">
+				<h1>Browse</h1>
+			</header>
+
+			<section class="browse-section">
+				<div class="section-head">
+					<p class="eyebrow">Tags</p>
+					<h2>Browse by topic</h2>
+					<p class="lead">{tags.length} tags across {posts.length} posts.</p>
+				</div>
+
+				<ul class="tag-grid">
+					{
+						tags.map(([tag, count]) => (
+							<li>
+								<a href={withBase(`/browse/tag/${tagSlug(tag)}/`)}>
+									<span class="tag-name">#{tag}</span>
+									<span class="tag-count">{count}</span>
+								</a>
+							</li>
+						))
+					}
+				</ul>
+
+				{tags.length === 0 && <p class="muted">No tags yet. Add <code>tags</code> to a post's frontmatter.</p>}
+			</section>
+
+			<section class="browse-section">
+				<div class="section-head">
+					<p class="eyebrow">Tree</p>
+					<h2>Browse by node</h2>
+				</div>
+				<BrowseTree posts={posts} />
+			</section>
+		</main>
+		<Footer />
+	</body>
+</html>
+
+<style>
+	.page-head {
+		padding-block: 4rem 1rem;
+	}
+
+	.page-head h1 {
+		margin: 0;
+		font-size: clamp(2.2rem, 5vw, 3rem);
+		letter-spacing: -0.03em;
+	}
+
+	.browse-section {
+		margin-top: 3.5rem;
+	}
+
+	.section-head {
+		margin-bottom: 1.5rem;
+	}
+
+	.section-head h2 {
+		margin: 0 0 0.35rem;
+		font-size: 1.6rem;
+	}
+
+	.lead {
+		margin: 0;
+		color: var(--text-muted);
+	}
+
+	.tag-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+		gap: 0.75rem;
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	.tag-grid a {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+		padding: 0.9rem 1.1rem;
+		border: 1px solid var(--border);
+		border-radius: var(--radius-sm);
+		background: var(--bg-elevated);
+		color: var(--text);
+		text-decoration: none;
+		transition: border-color 0.15s ease, transform 0.15s ease;
+	}
+
+	.tag-grid a:hover {
+		border-color: var(--accent);
+		transform: translateY(-2px);
+		text-decoration: none;
+		color: var(--text);
+	}
+
+	.tag-name {
+		font-weight: 600;
+	}
+
+	.tag-count {
+		font-size: 0.8rem;
+		color: var(--text-faint);
+	}
+</style>

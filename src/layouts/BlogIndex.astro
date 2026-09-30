@@ -32,7 +32,7 @@ const searchIndex = allPosts.map((post) => {
 			day: 'numeric',
 		}),
 		minutes,
-		tags: post.data.tags.map((tag) => ({ label: tag, url: withBase(`/tags/${tagSlug(tag)}/`) })),
+		tags: post.data.tags.map((tag) => ({ label: tag, url: withBase(`/browse/tag/${tagSlug(tag)}/`) })),
 		search: [post.data.title, post.data.description, ...post.data.tags, getPlainText(post.body)]
 			.join(' ')
 			.toLowerCase(),
