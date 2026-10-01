@@ -13,7 +13,7 @@ const posts = await getCollection('blog', ({ data }) => !data.draft);
 const tree = buildPostTree(posts);
 ---
 
-<nav class="doc-tree" aria-label="Post navigation">
+<nav class="doc-tree" aria-label="Post navigation" data-current-path={currentPath}>
 	<p class="tree-title">Docs</p>
 	<ul class="tree-root">
 		<TreeNode node={tree} currentPath={currentPath} isRoot={true} />
@@ -21,7 +21,58 @@ const tree = buildPostTree(posts);
 </nav>
 
 <script is:inline>
-	document.querySelectorAll('.tree-summary a').forEach((link) => {
-		link.addEventListener('click', (event) => event.stopPropagation());
-	});
+	(() => {
+		// Keep summary links clickable without toggling the <details>.
+		document.querySelectorAll('.tree-summary a').forEach((link) => {
+			link.addEventListener('click', (event) => event.stopPropagation());
+		});
+
+		// Persist which branches are expanded across page loads (this tree only;
+		// the Browse tree is intentionally not persisted).
+		const STORAGE_KEY = 'doc-tree-open';
+		const nav = document.querySelector('.doc-tree');
+		if (!nav) return;
+
+		let saved = {};
+		try {
+			saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') || {};
+		} catch (e) {
+			saved = {};
+		}
+
+		const currentPath = nav.getAttribute('data-current-path') || '';
+		const detailsList = Array.from(nav.querySelectorAll('details[data-tree-node]'));
+
+		const restore = () => {
+			for (const details of detailsList) {
+				const id = details.getAttribute('data-tree-node');
+				if (id && Object.prototype.hasOwnProperty.call(saved, id)) {
+					details.open = saved[id];
+				}
+			}
+			// Always reveal the root and the current post's ancestors.
+			for (const details of detailsList) {
+				const id = details.getAttribute('data-tree-node');
+				if (id === '__root__' || (currentPath && (currentPath === id || currentPath.indexOf(id + '/') === 0))) {
+					details.open = true;
+				}
+			}
+		};
+
+		const persist = () => {
+			const state = {};
+			for (const details of detailsList) {
+				const id = details.getAttribute('data-tree-node');
+				if (id) state[id] = details.open;
+			}
+			try {
+				localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+			} catch (e) {
+				/* ignore */
+			}
+		};
+
+		restore();
+		nav.addEventListener('toggle', persist, true);
+	})();
 </script>

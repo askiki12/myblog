@@ -550,6 +550,10 @@ details[open] > .browse-summary .browse-chevron {
 	font-weight: 600;
 }
 
+.browse-summary .browse-link {
+	font-weight: 600;
+}
+
 .browse-node.root > details > .browse-summary .browse-link {
 	font-weight: 700;
 }

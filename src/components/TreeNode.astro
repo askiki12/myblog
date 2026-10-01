@@ -20,7 +20,7 @@ const isOpen = isRoot || containsCurrent;
 <li class:list={['tree-node', { root: isRoot }]}>
 	{
 		hasChildren ? (
-			<details open={isOpen}>
+			<details open={isOpen} data-tree-node={node.path || '__root__'}>
 				<summary class="tree-summary">
 					{isRoot || node.post ? (
 						<a href={href}>{node.title}</a>

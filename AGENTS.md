@@ -94,6 +94,10 @@ Cover behavior:
     `body`; with only `margin-inline: auto` it would shrink-to-fit and the side
     tracks would change with the tree/TOC content (subtle layout shift).
   - Sidebar visibility persists in `localStorage` (`sidebar-tree`, `sidebar-toc`).
+  - The post-page document tree (`DocumentTree.astro` / `TreeNode.astro`) persists each
+    branch's open/closed state in `localStorage` (`doc-tree-open`, keyed by node path via
+    `data-tree-node`); the current post's ancestors (and the root) are always forced open.
+    The Browse tree is intentionally **not** persisted.
   - Columns stack at `@media (max-width: 1280px)`; keep the JS
     `matchMedia('(min-width: 1281px)')` in sync.
 - **Footer sticks to the bottom**: `body` is a flex column and `.post-shell` uses
@@ -109,8 +113,11 @@ Cover behavior:
   fills it (cover, description, date, reading time, tags, "Read post"); clicking
   still navigates. Covers are shown only when the post sets `heroImage` (no fallback here)
   and are pre-optimized via `getImage()` into the embedded JSON (`#browse-preview-index`).
-  On desktop the tree column scrolls inside its own container (`max-height: calc(100vh - 7rem)`)
-  so a long/fully-expanded tree never grows the page and the preview stays visible.
+   On desktop only the node list scrolls (`.browse-tree-scroll`, `max-height: calc((100vh - 7rem) * 0.75)`)
+  so a long/fully-expanded tree never grows the page and the preview stays visible; the
+  Expand all / Collapse all toolbar sits **outside** that scroll region and stays pinned.
+  Scroll regions (that list and `.post-sidebar` in `BlogPost.astro`) deliberately omit
+  `overscroll-behavior: contain`, so hitting an inner end chains scrolling back to the page.
   The preview panel also has a **fixed height** (`min(560px, calc(100vh - 7rem))`) — otherwise,
   because posts differ (cover vs none, short vs long description), each hover would change the
   row height, toggle the page scrollbar and shift the layout, which can feed back into another

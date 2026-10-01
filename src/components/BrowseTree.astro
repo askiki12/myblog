@@ -44,9 +44,11 @@ const previewJson = JSON.stringify(previewIndex).replace(/</g, '\\u003c');
 			<button id="tree-expand-all" type="button" class="tree-btn">Expand all</button>
 			<button id="tree-collapse-all" type="button" class="tree-btn">Collapse all</button>
 		</div>
-		<ul class="browse-list">
-			<BrowseTreeNode node={tree} isRoot={true} />
-		</ul>
+		<div class="browse-tree-scroll">
+			<ul class="browse-list">
+				<BrowseTreeNode node={tree} isRoot={true} />
+			</ul>
+		</div>
 	</div>
 
 	<aside class="browse-preview" id="browse-preview" aria-label="Post preview">
@@ -229,17 +231,19 @@ const previewJson = JSON.stringify(previewIndex).replace(/</g, '\\u003c');
 		text-decoration: none;
 	}
 
-	/* On desktop the tree scrolls inside its own column, so a long (fully
-	   expanded) tree never grows the page and the preview stays put. The preview
-	   panel also has a fixed height: otherwise switching between posts (cover vs
-	   none, short vs long description) would change the row height, toggle the
-	   page scrollbar and shift the layout while the pointer stays still. */
+	/* On desktop only the node list scrolls (`browse-tree-scroll`), so the
+	   Expand/Collapse toolbar stays pinned above it. A long (fully expanded) tree
+	   never grows the page and the preview stays put. No `overscroll-behavior:
+	   contain`, so once the list hits its end the page keeps scrolling. The
+	   preview panel also has a fixed height: otherwise switching between posts
+	   (cover vs none, short vs long description) would change the row height,
+	   toggle the page scrollbar and shift the layout while the pointer stays
+	   still. */
 	@media (min-width: 1025px) {
-		.browse-tree {
-			max-height: calc(100vh - 7rem);
+		.browse-tree-scroll {
+			max-height: calc((100vh - 7rem) * 0.65);
 			padding-right: 0.5rem;
 			overflow-y: auto;
-			overscroll-behavior: contain;
 		}
 
 		.browse-preview {
