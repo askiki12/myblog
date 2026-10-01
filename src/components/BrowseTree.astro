@@ -230,11 +230,20 @@ const previewJson = JSON.stringify(previewIndex).replace(/</g, '\\u003c');
 	}
 
 	/* On desktop the tree scrolls inside its own column, so a long (fully
-	   expanded) tree never grows the page and the preview stays put. */
+	   expanded) tree never grows the page and the preview stays put. The preview
+	   panel also has a fixed height: otherwise switching between posts (cover vs
+	   none, short vs long description) would change the row height, toggle the
+	   page scrollbar and shift the layout while the pointer stays still. */
 	@media (min-width: 1025px) {
 		.browse-tree {
 			max-height: calc(100vh - 7rem);
 			padding-right: 0.5rem;
+			overflow-y: auto;
+			overscroll-behavior: contain;
+		}
+
+		.browse-preview {
+			height: min(560px, calc(100vh - 7rem));
 			overflow-y: auto;
 			overscroll-behavior: contain;
 		}

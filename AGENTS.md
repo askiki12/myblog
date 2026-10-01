@@ -111,7 +111,10 @@ Cover behavior:
   and are pre-optimized via `getImage()` into the embedded JSON (`#browse-preview-index`).
   On desktop the tree column scrolls inside its own container (`max-height: calc(100vh - 7rem)`)
   so a long/fully-expanded tree never grows the page and the preview stays visible.
-  Without JS or at ≤1024px the panel is hidden and the tree stays fully usable. Tag detail pages
+  The preview panel also has a **fixed height** (`min(560px, calc(100vh - 7rem))`) — otherwise,
+  because posts differ (cover vs none, short vs long description), each hover would change the
+  row height, toggle the page scrollbar and shift the layout, which can feed back into another
+  hover and oscillate. Without JS or at ≤1024px the panel is hidden and the tree stays fully usable. Tag detail pages
   live at `/browse/tag/<slug>/`; the old `/tags/*` URLs render meta-refresh redirect
   pages (`src/pages/tags/`) and are excluded from the sitemap.
 - **Blog index** (`src/layouts/BlogIndex.astro`) has a client-side search box
