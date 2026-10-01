@@ -201,27 +201,48 @@ const nextPost = currentIndex >= 0 && currentIndex < ordered.length - 1 ? ordere
 	const shell = document.getElementById('post-shell');
 	if (shell) {
 		const wide = window.matchMedia('(min-width: 1281px)');
-		const state = {
-			tree: localStorage.getItem('sidebar-tree') ?? (wide.matches ? 'open' : 'closed'),
-			toc: localStorage.getItem('sidebar-toc') ?? (wide.matches ? 'open' : 'closed'),
+		const toggleTree = document.getElementById('toggle-tree');
+		const toggleToc = document.getElementById('toggle-toc');
+		const stored = {
+			tree: localStorage.getItem('sidebar-tree'),
+			toc: localStorage.getItem('sidebar-toc'),
 		};
+		const state = {
+			tree: stored.tree ?? (wide.matches ? 'open' : 'closed'),
+			toc: stored.toc ?? (wide.matches ? 'open' : 'closed'),
+		};
+		const pref = { tree: stored.tree !== null, toc: stored.toc !== null };
 
 		const apply = () => {
 			shell.classList.toggle('hide-tree', state.tree === 'closed');
 			shell.classList.toggle('hide-toc', state.toc === 'closed');
-			document.getElementById('toggle-tree')?.setAttribute('aria-expanded', String(state.tree === 'open'));
-			document.getElementById('toggle-toc')?.setAttribute('aria-expanded', String(state.toc === 'open'));
+			toggleTree?.setAttribute('aria-expanded', String(state.tree === 'open'));
+			toggleToc?.setAttribute('aria-expanded', String(state.toc === 'open'));
+			// The sidebars only exist in the wide (3-column) layout.
+			if (toggleTree) toggleTree.disabled = !wide.matches;
+			if (toggleToc) toggleToc.disabled = !wide.matches;
 		};
 
 		const toggle = (key: 'tree' | 'toc') => {
 			state[key] = state[key] === 'open' ? 'closed' : 'open';
+			pref[key] = true;
 			localStorage.setItem(`sidebar-${key}`, state[key]);
 			apply();
 		};
 
+		// Crossing the breakpoint: if the user never chose, fall back to the
+		// default for the new width; otherwise keep their persisted choice.
+		const onBreakpoint = () => {
+			if (!pref.tree) state.tree = wide.matches ? 'open' : 'closed';
+			if (!pref.toc) state.toc = wide.matches ? 'open' : 'closed';
+			apply();
+		};
+
 		apply();
-		document.getElementById('toggle-tree')?.addEventListener('click', () => toggle('tree'));
-		document.getElementById('toggle-toc')?.addEventListener('click', () => toggle('toc'));
+		toggleTree?.addEventListener('click', () => toggle('tree'));
+		toggleToc?.addEventListener('click', () => toggle('toc'));
+		if (wide.addEventListener) wide.addEventListener('change', onBreakpoint);
+		else wide.addListener(onBreakpoint);
 	}
 
 	const backPage = document.getElementById('back-page');
@@ -473,6 +494,9 @@ const nextPost = currentIndex >= 0 && currentIndex < ordered.length - 1 ? ordere
 		}
 	}
 
+	/* Too narrow for the 3-column layout: hide both sidebars entirely and
+	   disable their toggle buttons (JS mirrors this via `disabled`). Widening
+	   back past the breakpoint restores the previous (persisted) state. */
 	@media (max-width: 1280px) {
 		.post-shell {
 			display: block;
@@ -480,15 +504,12 @@ const nextPost = currentIndex >= 0 && currentIndex < ordered.length - 1 ? ordere
 		}
 
 		.post-sidebar {
-			position: static;
-			width: auto;
-			max-width: none;
-			max-height: none;
-			margin-bottom: 1.5rem;
-			padding: 1rem;
-			border: 1px solid var(--border);
-			border-radius: var(--radius-sm);
-			background: var(--bg-muted);
+			display: none;
+		}
+
+		.icon-btn:disabled {
+			opacity: 0.4;
+			cursor: not-allowed;
 		}
 
 		.post-toolbar {

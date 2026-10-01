@@ -98,8 +98,10 @@ Cover behavior:
     branch's open/closed state in `localStorage` (`doc-tree-open`, keyed by node path via
     `data-tree-node`); the current post's ancestors (and the root) are always forced open.
     The Browse tree is intentionally **not** persisted.
-  - Columns stack at `@media (max-width: 1280px)`; keep the JS
-    `matchMedia('(min-width: 1281px)')` in sync.
+  - At `@media (max-width: 1280px)` (too narrow for the 3-column layout) both
+    `.post-sidebar`s are hidden outright and the two toggle buttons are `disabled`;
+    widening back restores the persisted state. Keep the JS
+    `matchMedia('(min-width: 1281px)')` in sync with the CSS breakpoint.
 - **Footer sticks to the bottom**: `body` is a flex column and `.post-shell` uses
   `flex: 1 0 auto`.
 - **Post header order**: title → description → date/reading → tags.
