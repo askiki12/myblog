@@ -390,6 +390,9 @@ details[open] > .tree-summary .chevron {
 	margin: 0;
 	max-width: 62ch;
 	color: var(--text-muted);
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
 }
 
 .post-meta {
