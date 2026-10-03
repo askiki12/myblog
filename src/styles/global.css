@@ -569,3 +569,22 @@ details[open] > .browse-summary .browse-chevron {
 	color: var(--text-faint);
 	text-align: center;
 }
+
+/* ---------- KaTeX math ---------- */
+/* KaTeX inherits `currentColor`, so formulas follow the light/dark theme.
+   Display equations can be wider than the reading column: keep them
+   scrollable instead of overflowing the article. */
+.prose .katex {
+	font-size: 1.05em;
+}
+
+.prose .katex-display {
+	margin: 1.4em 0;
+	padding-block: 0.2em;
+	overflow-x: auto;
+	overflow-y: hidden;
+}
+
+.prose .katex-display > .katex {
+	white-space: normal;
+}
